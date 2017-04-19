@@ -2,6 +2,7 @@
 table(is.na(num_train))
 table(is.na(num_test))
 
+# 过滤高度相关的变量
 library(caret)
 x <- cor(num_train)
 ax <- findCorrelation(x=cor(num_train), cutoff=0.7)
@@ -22,7 +23,7 @@ mvte
 cat_train <- subset(cat_train, select = mvtr < 5 )
 cat_test <- subset(cat_test, select = mvte < 5)
 
-#对于cat_train中剩下的遗漏值，比较好的办法是将其标记为“Unavailable”
+#对于cat_train与cat_test中剩下的遗漏值，比较好的办法是将其标记为“Unavailable”
 
 cat_train <- cat_train[,names(cat_train) := lapply(.SD, as.character),.SDcols = names(cat_train)]
 
