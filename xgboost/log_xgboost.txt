@@ -1,0 +1,107 @@
+> tr_labels <- d_train$income_level
+> ts_labels <- d_test$income_level
+> new_tr <- model.matrix(~.+0,data = d_train[,-c("income_level"),with=F])
+> new_ts <- model.matrix(~.+0,data = d_test[,-c("income_level"),with=F])
+> tr_labels <- as.numeric(tr_labels)-1
+> ts_labels <- as.numeric(ts_labels)-1
+> dtrain <- xgb.DMatrix(data = new_tr,label = tr_labels)
+> dtest <- xgb.DMatrix(data = new_ts,label= ts_labels)
+> params <- list(booster = "gbtree", 
++                objective = "binary:logistic", 
++                eta=0.3, gamma=0, max_depth=6, 
++                min_child_weight=1, subsample=1, 
++                colsample_bytree=1)
+> xgbcv <- xgb.cv( params = params, 
++                  data = dtrain, nrounds = 100, 
++                  nfold = 5, showsd = T, 
++                  stratified = T, print.every.n = 10,
++                  early.stop.round = 20, maximize = F)
+[1]	train-error:0.049454+0.000231	test-error:0.050275+0.001244 
+Multiple eval metrics are present. Will use test_error for early stopping.
+Will train until test_error hasn't improved in 20 rounds.
+
+[11]	train-error:0.045343+0.000408	test-error:0.046691+0.001152 
+[21]	train-error:0.042996+0.000356	test-error:0.045323+0.001094 
+[31]	train-error:0.041548+0.000311	test-error:0.044180+0.000912 
+[41]	train-error:0.040261+0.000405	test-error:0.043739+0.000868 
+[51]	train-error:0.039582+0.000303	test-error:0.043514+0.000995 
+[61]	train-error:0.038914+0.000295	test-error:0.043308+0.000788 
+[71]	train-error:0.038361+0.000195	test-error:0.043088+0.000858 
+[81]	train-error:0.037948+0.000252	test-error:0.043003+0.000837 
+[91]	train-error:0.037500+0.000189	test-error:0.042937+0.000921 
+[100]	train-error:0.037144+0.000316	test-error:0.043063+0.001010 
+Warning messages:
+1: 'print.every.n' is deprecated.
+Use 'print_every_n' instead.
+See help("Deprecated") and help("xgboost-deprecated"). 
+2: 'early.stop.round' is deprecated.
+Use 'early_stopping_rounds' instead.
+See help("Deprecated") and help("xgboost-deprecated"). 
+> xgb1 <- xgb.train (params = params, 
++                    data = dtrain, nrounds = 100, 
++                    watchlist = list(val=dtest,train=dtrain), 
++                    print.every.n = 10, 
++                    early.stop.round = 10, 
++                    maximize = F , eval_metric = "error")
+[1]	val-error:0.049758	train-error:0.049714 
+Multiple eval metrics are present. Will use train_error for early stopping.
+Will train until train_error hasn't improved in 10 rounds.
+
+[11]	val-error:0.046511	train-error:0.045644 
+[21]	val-error:0.044937	train-error:0.042993 
+[31]	val-error:0.044396	train-error:0.041504 
+[41]	val-error:0.043915	train-error:0.040777 
+[51]	val-error:0.044205	train-error:0.039835 
+[61]	val-error:0.044486	train-error:0.038888 
+[71]	val-error:0.044917	train-error:0.038467 
+[81]	val-error:0.045007	train-error:0.038166 
+[91]	val-error:0.044797	train-error:0.037890 
+[100]	val-error:0.044917	train-error:0.037665 
+Warning messages:
+1: 'print.every.n' is deprecated.
+Use 'print_every_n' instead.
+See help("Deprecated") and help("xgboost-deprecated"). 
+2: 'early.stop.round' is deprecated.
+Use 'early_stopping_rounds' instead.
+See help("Deprecated") and help("xgboost-deprecated"). 
+> xgbpred <- predict (xgb1,d_test)
+Error in xgb.DMatrix(newdata, missing = missing) : 
+  xgb.DMatrix: does not support to construct from  list
+In addition: Warning messages:
+1: In if (class(newdata) != "xgb.DMatrix") newdata <- xgb.DMatrix(newdata,  :
+  the condition has length > 1 and only the first element will be used
+2: In if (class(data) == "dgCMatrix") { :
+  the condition has length > 1 and only the first element will be used
+> xgbpred <- predict (xgb1,dtest)
+> xgbpred <- ifelse (xgbpred > 0.5,1,0)
+> library(caret)
+> confusionMatrix(xgbpred, ts_labels)
+Confusion Matrix and Statistics
+
+          Reference
+Prediction     0     1
+         0 92366  3271
+         1  1210  2915
+                                          
+               Accuracy : 0.9551          
+                 95% CI : (0.9538, 0.9564)
+    No Information Rate : 0.938           
+    P-Value [Acc > NIR] : < 2.2e-16       
+                                          
+                  Kappa : 0.5427          
+ Mcnemar's Test P-Value : < 2.2e-16       
+                                          
+            Sensitivity : 0.9871          
+            Specificity : 0.4712          
+         Pos Pred Value : 0.9658          
+         Neg Pred Value : 0.7067          
+             Prevalence : 0.9380          
+         Detection Rate : 0.9259          
+   Detection Prevalence : 0.9587          
+      Balanced Accuracy : 0.7291          
+                                          
+       'Positive' Class : 0               
+                                          
+> mat <- xgb.importance (feature_names = colnames(new_tr),model = xgb1)
+> xgb.plot.importance (importance_matrix = mat[1:20])
+> 

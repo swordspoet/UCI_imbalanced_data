@@ -1,3 +1,4 @@
+library(mlr)
 naive_learner <- makeLearner("classif.naiveBayes", predict.type = "response")
 naive_learner$par.vals <- list(laplace = 1)
 
@@ -23,7 +24,7 @@ fun_cv(train_over)
 fun_cv(train_smote)
 # Result: acc.test.mean=0.896,tpr.test.mean=0.842,tnr.test.mean=0.951,
 # fpr.test.mean=0.0488,fp.test.mean= 906,fn.test.mean=2.96e+03
-
+fun_cv(sample.task)
 nB_model <- train(naive_learner, train_smote)
 nB_predict <- predict(nB_model, test.task)
 

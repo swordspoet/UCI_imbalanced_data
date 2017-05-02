@@ -1,0 +1,20 @@
+{
+    "collab_server" : "",
+    "contents" : "#using one hot encoding\ntr_labels <- d_train$income_level\nts_labels <- d_test$income_level\nnew_tr <- model.matrix(~.+0,data = d_train[,-c(\"income_level\"),with=F])\nnew_ts <- model.matrix(~.+0,data = d_test[,-c(\"income_level\"),with=F])\n#convert factor to numeric\ntr_labels <- as.numeric(tr_labels)-1\nts_labels <- as.numeric(ts_labels)-1\n# 准备矩阵\ndtrain <- xgb.DMatrix(data = new_tr,label = tr_labels) \ndtest <- xgb.DMatrix(data = new_ts,label= ts_labels)\n\nparams <- list(booster = \"gbtree\", \n               objective = \"binary:logistic\", \n               eta=0.3, gamma=0, max_depth=6, \n               min_child_weight=1, subsample=1, \n               colsample_bytree=1)\nxgbcv <- xgb.cv( params = params, \n                 data = dtrain, nrounds = 100, \n                 nfold = 5, showsd = T, \n                 stratified = T, print.every.n = 10,\n                 early.stop.round = 20, maximize = F)\nxgb1 <- xgb.train (params = params, \n                   data = dtrain, nrounds = 100, \n                   watchlist = list(val=dtest,train=dtrain), \n                   print.every.n = 10, \n                   early.stop.round = 10, \n                   maximize = F , eval_metric = \"error\")\nxgbpred <- predict (xgb1,dtest)\nxgbpred <- ifelse (xgbpred > 0.5,1,0)\nlibrary(caret)\nconfusionMatrix(xgbpred, ts_labels)\nmat <- xgb.importance (feature_names = colnames(new_tr),model = xgb1)\nxgb.plot.importance (importance_matrix = mat[1:20]) \n",
+    "created" : 1493646899291.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "3076939893",
+    "id" : "20DBB5F3",
+    "lastKnownWriteTime" : 1493622522,
+    "last_content_update" : 1493622522,
+    "path" : "E:/R/xgboost/2_xgboost.R",
+    "project_path" : "2_xgboost.R",
+    "properties" : {
+    },
+    "relative_order" : 3,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}

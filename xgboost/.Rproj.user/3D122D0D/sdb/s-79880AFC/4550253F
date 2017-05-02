@@ -1,0 +1,20 @@
+{
+    "collab_server" : "",
+    "contents" : "# 加载包\nlibrary(caret)\nlibrary(data.table)\nlibrary(mlr)\nlibrary(xgboost)\n\n# 加载数据集\ntrain <- fread(\"E:/R/imbalancedata/train.csv\",na.string=c(\"\",\" \",\"?\",\"NA\",NA)) \ntest <- fread(\"E:/R/imbalancedata/test.csv\",na.string=c(\"\",\" \",\"?\",\"NA\",NA))\ntable(is.na(train));table(is.na(test))\n#convert data frame to data table\nsetDT(train)\nsetDT(test)\n# convert characters to factors\nchar_cols <- colnames(train)[sapply(train,is.character)]\nfor(i in char_cols) set(train,j=i,value = factor(train[[i]]))\nfor(i in char_cols) set(test,j=i,value = factor(test[[i]]))\n# 创建任务\ntrain_task <- makeClassifTask(data = train, target = \"income_level\")\ntest_task <- makeClassifTask(data = test, target = \"income_level\")\n# one-hot编码\ntrain_task <- createDummyFeatures(obj = train_task)\ntest_task <- createDummyFeatures(obj = test_task)\n# make a xgboost learner\nset.seed(2002)\nxgb_learner <- makeLearner(\"classif.xgboost\",predict.type = \"response\")\nxgb_learner$par.vals <- list(\n  objective = \"binary:logistic\",\n  eval_metric = \"error\",\n  nrounds = 150,\n  print.every.n = 50)\nxg_ps <- makeParamSet( \n  makeIntegerParam(\"max_depth\",lower=3,upper=10),\n  makeNumericParam(\"lambda\",lower=0.05,upper=0.5),\n  makeNumericParam(\"eta\", lower = 0.01, upper = 0.5),\n  makeNumericParam(\"subsample\", lower = 0.50, upper = 1),\n  makeNumericParam(\"min_child_weight\",lower=2,upper=10),\n  makeNumericParam(\"colsample_bytree\",lower = 0.50,upper = 0.80))\n#define search function\nrancontrol <- makeTuneControlRandom(maxit = 5L) #do 5 iterations\n#5 fold cross validation\nset_cv <- makeResampleDesc(\"CV\",iters = 5L,stratify = TRUE)\n#set parallel backend\nlibrary(parallel)\nlibrary(parallelMap)\nparallelStartSocket(cpus = detectCores())\n#tune parameters\nxgb_tune <- tuneParams(learner = xgb_learner, task = train_task, resampling = set_cv, \n                       measures = list(acc,tpr,tnr,fpr,fp,fn), par.set = xg_ps, \n                       control = rancontrol)\nxgb_tune$y\n#set optimal parameters\nxgb_new <- setHyperPars(xgb_learner, par.vals = xgb_tune$x)\n#train model\nxgmodel = train(xgb_new, train_task)\npredict_xgb <- predict(xgmodel, test_task)\nxgb_prediction <- predict_xgb$data$response\ntest[,income_level:= ifelse(income_level == \"-50000\",\"-50000\",\"+50000\")]\nxg_confused <- confusionMatrix(test$income_level,xgb_prediction)\n",
+    "created" : 1493630969623.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "32990039",
+    "id" : "4550253F",
+    "lastKnownWriteTime" : 1493695843,
+    "last_content_update" : 1493695843610,
+    "path" : "E:/R/xgboost/3_mlr_xgboost.R",
+    "project_path" : "3_mlr_xgboost.R",
+    "properties" : {
+    },
+    "relative_order" : 3,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}

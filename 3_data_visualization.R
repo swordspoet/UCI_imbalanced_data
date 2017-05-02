@@ -14,13 +14,13 @@ tr(num_train$capital_losses)
 num_train[,income_level := cat_train$income_level]
 # 连续型变量可视化
 ggplot(data=num_train,aes(x = age,y=wage_per_hour))+geom_point(aes(colour=income_level))+
-scale_y_continuous("wage per hour", breaks = seq(0,10000,1000))
+  scale_y_continuous("wage per hour", breaks = seq(0,10000,1000))
 
 ggplot(data=num_train,aes(x = age,y=weeks_worked_in_year))+geom_point(aes(colour=income_level))+
   scale_y_continuous("weeks worked in a year", breaks = seq(0,60,5))
 
 ggplot(data=num_train,aes(x = age,y=dividend_from_Stocks))+geom_point(aes(colour=income_level))+
-scale_y_continuous("dividend from stocks", breaks = seq(0,10000,5000))
+  scale_y_continuous("dividend from stocks", breaks = seq(0,10000,5000))
 
 ggplot(data=num_train,aes(x = age,y=capital_gains))+geom_point(aes(colour=income_level))+
   scale_y_continuous("capital gains", breaks = seq(0,30000,3000))

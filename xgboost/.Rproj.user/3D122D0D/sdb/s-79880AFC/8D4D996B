@@ -1,0 +1,20 @@
+{
+    "collab_server" : "",
+    "contents" : "# 加载包\nlibrary(caret)\nlibrary(data.table)\nlibrary(mlr)\nlibrary(xgboost)\n\n# 加载数据集\ntrain <- fread(\"E:/R/imbalancedata/train.csv\",na.string=c(\"\",\" \",\"?\",\"NA\",NA)) \ntest <- fread(\"E:/R/imbalancedata/test.csv\",na.string=c(\"\",\" \",\"?\",\"NA\",NA))\ntable(is.na(train));table(is.na(test))\n#convert data frame to data table\nsetDT(train)\nsetDT(test)\n# 将train,test数据切分为数值型和类别型\nfactcols <- c(2:5,7,8:16,20:29,31:38,40,41)\nnumcols <- setdiff(1:40,factcols)\ncat_train <- train[,factcols, with=FALSE];cat_test <- test[,factcols,with=FALSE]\nnum_train <- train[,numcols,with=FALSE];num_test <- test[,numcols,with=FALSE]\n# 去掉数值型(num)数据中高度相关的变量\nax <- findCorrelation(cor(num_train), cutoff = 0.7)\nnum_train <- num_train[,-ax,with=FALSE];num_test <- num_test[,-ax,with=FALSE]\n# 处理类别型(cat)数据中的遗漏值\nmvtr <- sapply(cat_train, function(x){sum(is.na(x))/length(x)}*100)\nmvte <- sapply(cat_test, function(x){sum(is.na(x)/length(x))}*100)\n# 将遗漏率小于5%的列单独挑选出来\ncat_train <- subset(cat_train, select = mvtr < 5 )\ncat_test <- subset(cat_test, select = mvte < 5)\ncat_train[is.na(cat_train)] <- \"Missing\";cat_test[is.na(cat_test)] <- \"Missing\" \n# 合并数值型和分类型数据\nd_train <- cbind(num_train, cat_train);d_test <- cbind(num_test, cat_test)\nrm(train,test,num_train,num_test,cat_train,cat_test)",
+    "created" : 1493630942780.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "2057008709",
+    "id" : "8D4D996B",
+    "lastKnownWriteTime" : 1493640770,
+    "last_content_update" : 1493640770879,
+    "path" : "E:/R/xgboost/1_data_preprocessing.R",
+    "project_path" : "1_data_preprocessing.R",
+    "properties" : {
+    },
+    "relative_order" : 2,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}

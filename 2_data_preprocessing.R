@@ -9,8 +9,8 @@ test[,income_level:= ifelse(income_level == "-50000",0,1)]
 # 计算目标变量各个取值占比
 round(prop.table(table(train$income_level))*100)
 # 设置变量的对应类别为数值型和名义型
-factcols <- c(2:5,7,8:16,20:29,31:38,40)
-numcols <- setdiff(1:41,factcols)
+factcols <- c(2:5,7,8:16,20:29,31:38,40,41)
+numcols <- setdiff(1:40,factcols)
 # lapply的.SD的用法
 train[,(factcols) := lapply(.SD, factor), .SDcols = factcols]
 train[,(numcols) := lapply(.SD, as.numeric), .SDcols = numcols]
@@ -22,5 +22,5 @@ cat_test <- test[,factcols,with=FALSE]
 
 num_train <- train[,numcols,with=FALSE]
 num_test <- test[,numcols,with=FALSE]
-# 移除以节省内存
+# 移除以节省内存  
 rm(train,test) 
